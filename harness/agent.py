@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ You dont currently have access to any tool, you cannot read, write files run any
 
 def run():
   """run this loop until the user ends the conversation"""
-  messages = [
+  messages: list[ChatCompletionMessageParam] = [
     {
       "role":"system",
       "content":SYSTEM_PROMPT
