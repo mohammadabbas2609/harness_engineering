@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, get_type_hints
 from pydantic import create_model
 import inspect
+from openai.types.chat import ChatCompletionToolUnionParam
 
 @dataclass
 class Tool:
@@ -26,7 +27,7 @@ class ToolRegistry:
   def register(self, tool: Tool) -> None:
     self._tools[tool.name] = tool
 
-  def get_schemas(self) -> list[dict]:
+  def get_schemas(self) -> list[ChatCompletionToolUnionParam]:
     """Returns the schemas of tools in OpenAI format"""
     schemas = []
 
@@ -44,7 +45,7 @@ class ToolRegistry:
 
     return schemas
 
-  def dispatch_schema(self, name: str, arguments: dict[str, Any]) -> str:
+  def dispatch(self, name: str, arguments: dict[str, Any]) -> str:
 
 
     if name not in self._tools:

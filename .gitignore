@@ -2,3 +2,10 @@
 .env
 
 __pycache__
+
+
+# Its for the local testing
+smoke.py
+
+
+workspace/

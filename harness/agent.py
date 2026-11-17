@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+import json
+from harness.tools import registry
+from typing import cast
 
 load_dotenv()
 
@@ -15,7 +18,7 @@ Be concise, and prefer short direct answers over long verbose one, when the user
 
 when returning code, use fenced block and specify the language.
 
-You dont currently have access to any tool, you cannot read, write files run any bash commands or modify any thing on users system, if user asks for anything that requires tool, say so plainly and suggest them to copy paste relevant chunk so you can act upon it.
+You currently have access to following tools: read, write, list, create_directory, delete tool scoped to a workspace directory, use them whenever tasks involves reading, modifying or organizing a file. Path are relative to workspace root. Prefer reading and writing file over describing them in coversation.
 """
 
 
@@ -46,13 +49,44 @@ def run():
     response = client.chat.completions.create(
       model=MODEL,
       messages=messages,
+      tools=registry.get_schemas()
     )
-    
-    ai_message = response.choices[0].message.content
+              
+    message = response.choices[0].message
 
-    print(f"AI > {ai_message}\n")
+    if message.tool_calls:
+      messages.append(cast(ChatCompletionMessageParam, message.model_dump(exclude_none=True)))
 
-    messages.append({ "role":"assistant", "content":ai_message })
+      for call in message.tool_calls:
+        if call.type != "function":
+          raise NotImplementedError(
+              f"Unsupported tool type: {call.type}"
+          )
+        print("**Tool Calling** \n")
+        print(f"calling tool {call.function.name} with foll args {call.function.arguments}\n")
+        arguments = json.loads(call.function.arguments)
+        result = registry.dispatch(name=call.function.name, arguments=arguments)
+        print(f"result of the tool {result}\n")
+        print("**Tool Calling Ended** \n")
+        messages.append({
+          "role":"tool",
+          "tool_call_id": call.id,
+          "content":result 
+        })
+
+      response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        tools=registry.get_schemas()
+      )
+          
+      message = response.choices[0].message
+
+    assistant_text = message.content
+
+    messages.append({ "role":"assistant", "content": assistant_text })
+
+    print(f"AI> {assistant_text}\n")
 
 
 
