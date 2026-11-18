@@ -68,102 +68,108 @@ Workspace also consist of AGENTS.md file, your durable memory across sessions. I
 def run():
   """run this loop until the user ends the conversation"""
 
-  # Load the agent.md file before any interaction happens
-  agent_md_file = load_agentmd_file()
+  try:
 
-  messages: list[ChatCompletionMessageParam] = [
-    {
-      "role":"system",
-      "content":SYSTEM_PROMPT
-    },
-    {
-      "role":"system",
-      "content":agent_md_file
-    }
-  ]
+    # Load the agent.md file before any interaction happens
+    agent_md_file = load_agentmd_file()
 
-  print("Welcome to idk, type quit or exit to end this session \n")
+    messages: list[ChatCompletionMessageParam] = [
+      {
+        "role":"system",
+        "content":SYSTEM_PROMPT
+      },
+      {
+        "role":"system",
+        "content":agent_md_file
+      }
+    ]
 
-  while True:
-
-    user_input = input("> ").strip()
-
-    if user_input in {"quit", "exit"}:
-      print("Good Bye!!")
-      break
-
-    if not user_input:
-      continue
-
-    messages.append({ "role":"user", "content":user_input })
-
-
-    step_count = 0
+    print("Welcome to idk, type quit or exit to end this session \n")
 
     while True:
-      response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        tools=registry.get_schemas()
-      )
-              
-      message = response.choices[0].message
 
-      if not message.tool_calls:
+      user_input = input("> ").strip()
+
+      if user_input in {"quit", "exit"}:
+        print("Good Bye!!")
         break
 
-      if step_count >= STEP_BUDGET:
-        
-        messages.append({
-          "role":"system",
-          "content":BUDGET_SURPASSED_MESSAGE
-        })
+      if not user_input:
+        continue
 
+      messages.append({ "role":"user", "content":user_input })
+
+
+      step_count = 0
+
+      while True:
         response = client.chat.completions.create(
           model=MODEL,
           messages=messages,
           tools=registry.get_schemas()
         )
+                
+        message = response.choices[0].message
 
-        break
+        if not message.tool_calls:
+          break
 
-      messages.append(cast(ChatCompletionMessageParam, message.model_dump(exclude_none=True)))
+        if step_count >= STEP_BUDGET:
+          
+          messages.append({
+            "role":"system",
+            "content":BUDGET_SURPASSED_MESSAGE
+          })
 
-      for call in message.tool_calls:
-
-        if call.type != "function":
-          raise NotImplementedError(
-              f"Unsupported tool type: {call.type}"
+          response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=registry.get_schemas()
           )
-        
-        print("**Tool Calling** \n")
-        print(f"calling tool {call.function.name} with foll args {call.function.arguments}\n")
 
-        arguments = json.loads(call.function.arguments)
-        result = registry.dispatch(name=call.function.name, arguments=arguments)
-        
-        print(f"result of the tool {result}\n")
-        print("**Tool Calling Ended** \n")
-        
-        messages.append({
-          "role":"tool",
-          "tool_call_id": call.id,
-          "content":result 
-        })
+          break
 
-      step_count += 1
+        messages.append(cast(ChatCompletionMessageParam, message.model_dump(exclude_none=True)))
 
-    if not message.content:
-      raise RuntimeError(
-        "Loop terminated but message.content is empty",
-        "Check API response and termination block to resolve"
-      )
+        for call in message.tool_calls:
 
-    assistant_text = message.content
+          if call.type != "function":
+            raise NotImplementedError(
+                f"Unsupported tool type: {call.type}"
+            )
+          
+          print("**Tool Calling** \n")
+          print(f"calling tool {call.function.name} with foll args {call.function.arguments}\n")
 
-    messages.append({ "role":"assistant", "content": assistant_text })
+          arguments = json.loads(call.function.arguments)
+          result = registry.dispatch(name=call.function.name, arguments=arguments)
+          
+          print(f"result of the tool {result}\n")
+          print("**Tool Calling Ended** \n")
+          
+          messages.append({
+            "role":"tool",
+            "tool_call_id": call.id,
+            "content":result 
+          })
 
-    print(f"AI> {assistant_text}\n")
+        step_count += 1
+
+      if not message.content:
+        raise RuntimeError(
+          "Loop terminated but message.content is empty",
+          "Check API response and termination block to resolve"
+        )
+
+      assistant_text = message.content
+
+      messages.append({ "role":"assistant", "content": assistant_text })
+
+      print(f"AI> {assistant_text}\n")
+  
+  except KeyboardInterrupt:
+
+    print("good bye !!")
 
 
 
