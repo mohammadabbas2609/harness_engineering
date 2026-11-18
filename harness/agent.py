@@ -13,6 +13,20 @@ MODEL = "gpt-4o-mini"
 client = OpenAI()
 
 
+# The amount of tool call per user turn the model can do, when hit the harness forces the model to summarize what it did and hand back the control to user instead of running loop infinitely
+STEP_BUDGET = 25
+
+BUDGET_SURPASSED_MESSAGE = f"""
+You reached the step budget for this turn ({STEP_BUDGET} tool call). Do not make any tool call instead hand the control back to user with 
+
+- What you accompolished in this turn ?
+- What is pending ?
+- What user should ask next to continue the work ?
+
+Your response will be the final message in this turn. The user will reply and you can continue from there
+"""
+
+
 SYSTEM_PROMPT = """
 You're an coding assistant running in terminal, helping a devloper in thier software engineering tasks. 
 
@@ -83,22 +97,45 @@ def run():
 
     messages.append({ "role":"user", "content":user_input })
 
-    response = client.chat.completions.create(
-      model=MODEL,
-      messages=messages,
-      tools=registry.get_schemas()
-    )
-              
-    message = response.choices[0].message
 
-    if message.tool_calls:
+    step_count = 0
+
+    while True:
+      response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        tools=registry.get_schemas()
+      )
+              
+      message = response.choices[0].message
+
+      if not message.tool_calls:
+        break
+
+      if step_count >= STEP_BUDGET:
+        
+        messages.append({
+          "role":"system",
+          "content":BUDGET_SURPASSED_MESSAGE
+        })
+
+        response = client.chat.completions.create(
+          model=MODEL,
+          messages=messages,
+          tools=registry.get_schemas()
+        )
+
+        break
+
       messages.append(cast(ChatCompletionMessageParam, message.model_dump(exclude_none=True)))
 
       for call in message.tool_calls:
+
         if call.type != "function":
           raise NotImplementedError(
               f"Unsupported tool type: {call.type}"
           )
+        
         print("**Tool Calling** \n")
         print(f"calling tool {call.function.name} with foll args {call.function.arguments}\n")
 
@@ -114,15 +151,15 @@ def run():
           "content":result 
         })
 
-      response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        tools=registry.get_schemas()
-      )
-          
-      message = response.choices[0].message
+      step_count += 1
 
-    assistant_text = message.content or "(not output: only tool used)"
+    if not message.content:
+      raise RuntimeError(
+        "Loop terminated but message.content is empty",
+        "Check API response and termination block to resolve"
+      )
+
+    assistant_text = message.content
 
     messages.append({ "role":"assistant", "content": assistant_text })
 
