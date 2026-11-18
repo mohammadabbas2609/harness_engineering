@@ -5,6 +5,8 @@ import json
 from harness.tools import registry
 from typing import cast
 
+from harness.memory import load_agentmd_file
+
 load_dotenv()
 
 MODEL = "gpt-4o-mini"
@@ -26,15 +28,25 @@ git_status, git_diff, git_log, git_commit, git_checkout, git_branch and git_merg
 - commit before doing any risky change, so you get the checkpoint to restore if things dont work out
 - meaningful commit message: it should describe what's change, what it impacts
 - use branches to create any independent feature and then merge it back
+
+Workspace also consist of AGENTS.md file, your durable memory across sessions. It is loaded in your context at very start of each session, update it whenever you learn something worth remembering for future sessions, like project context, conventions, gotchas, active tasks and future tasks (if it is worth remembering), also please preserve the exisiting structure whie updating it.
 """
 
 
 def run():
   """run this loop until the user ends the conversation"""
+
+  # Load the agent.md file before any interaction happens
+  agent_md_file = load_agentmd_file()
+
   messages: list[ChatCompletionMessageParam] = [
     {
       "role":"system",
       "content":SYSTEM_PROMPT
+    },
+    {
+      "role":"system",
+      "content":agent_md_file
     }
   ]
 
