@@ -18,7 +18,14 @@ Be concise, and prefer short direct answers over long verbose one, when the user
 
 when returning code, use fenced block and specify the language.
 
-You currently have access to following tools: read, write, list, create_directory, delete tool scoped to a workspace directory, use them whenever tasks involves reading, modifying or organizing a file. Path are relative to workspace root. Prefer reading and writing file over describing them in coversation.
+You currently have access to following file system tools: read, write, list, create_directory, delete tool scoped to a workspace directory, use them whenever tasks involves reading, modifying or organizing a file. Path are relative to workspace root. Prefer reading and writing file over describing them in coversation.
+
+You also have access to following git tools for versioning your work: 
+git_status, git_diff, git_log, git_commit, git_checkout, git_branch and git_merge. Please note: git is already initiliazed in workspace
+- commit frequently, small easy focused commit that are easy to rollback
+- commit before doing any risky change, so you get the checkpoint to restore if things dont work out
+- meaningful commit message: it should describe what's change, what it impacts
+- use branches to create any independent feature and then merge it back
 """
 
 
@@ -64,10 +71,13 @@ def run():
           )
         print("**Tool Calling** \n")
         print(f"calling tool {call.function.name} with foll args {call.function.arguments}\n")
+
         arguments = json.loads(call.function.arguments)
         result = registry.dispatch(name=call.function.name, arguments=arguments)
+        
         print(f"result of the tool {result}\n")
         print("**Tool Calling Ended** \n")
+        
         messages.append({
           "role":"tool",
           "tool_call_id": call.id,
@@ -82,7 +92,7 @@ def run():
           
       message = response.choices[0].message
 
-    assistant_text = message.content
+    assistant_text = message.content or "(not output: only tool used)"
 
     messages.append({ "role":"assistant", "content": assistant_text })
 
