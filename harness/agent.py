@@ -29,6 +29,24 @@ git_status, git_diff, git_log, git_commit, git_checkout, git_branch and git_merg
 - meaningful commit message: it should describe what's change, what it impacts
 - use branches to create any independent feature and then merge it back
 
+You also have access to one more tool: `bash`. It executes shell commands in the           
+workspace with full shell interpretation — pipes, redirects, and command
+chaining all work. Use bash for anything the specific tools above don't
+cover: running scripts (python foo.py, node foo.js), invoking system
+utilities (grep, find, curl, wc, sort, awk), installing packages
+(pip install ...), or exploring the environment (ls, pwd, which python).
+
+Prefer the specific tools when they apply. If the task is to read a
+file, use `read`, not `bash("cat file.md")`. If the task is to commit,
+use `git_commit`, not `bash("git commit ...")`. The specific tools are
+safer, faster, and clearer to trace. Reach for `bash` when the specific
+tools don't cover what you need — which is often, because software work
+is varied.
+
+Bash commands see the workspace as their working directory. `cd` inside
+a bash command does not persist to the next tool call; each bash
+invocation starts fresh from the workspace root.
+
 Workspace also consist of AGENTS.md file, your durable memory across sessions. It is loaded in your context at very start of each session, update it whenever you learn something worth remembering for future sessions, like project context, conventions, gotchas, active tasks and future tasks (if it is worth remembering), also please preserve the exisiting structure whie updating it.
 """
 
