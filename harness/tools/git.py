@@ -8,11 +8,7 @@ All operations run within a workspace as the working directory pinned by code no
 import subprocess
 from harness.tools.registry import tool
 from harness.tools.filesystem import WORKSPACE
-
-
-# Since we'll only use git for locall version control, it should be pretty quick, if command invocation tooks more than given time in GIT_TIMEOUT (in seconds) we'll kill that process
-
-GIT_TIMEOUT = 10 
+from harness.config import GIT_TIMEOUT
 
 def _run_git(*args: str) -> str:
   """

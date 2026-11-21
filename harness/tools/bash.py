@@ -3,18 +3,7 @@
 import subprocess
 from harness.tools.filesystem import WORKSPACE
 from harness.tools.registry import tool
-
-
-# Idea behind 60 is it can take longer time coz of network calls, installation etc
-BASH_TIMEOUT = 60 # in seconds
-
-# Command Allow List, empty means all command are allowed if not deny list
-ALLOW_LIST: set[str] = { "ls", "cat", "grep", "wc", "python", "python3", "pip" }
-
-
-# Command Deny List, if the command is in deny list it will not be performed, doesnt matter if it's in even allow list, somethin like IAM policy
-DENY_LIST: set[str] = { "dd", "sudo", "mkfs", "pip" }
-
+from harness.config import BASH_TIMEOUT, ALLOW_LIST, DENY_LIST
 
 # Seprator
 _CHAIN_SEPRATOR = ("&&", "||", "|", ";")
