@@ -7,6 +7,9 @@ from typing import cast
 from harness.tools import registry
 from harness.config import STEP_BUDGET, MODEL
 from harness.memory import load_agentmd_file
+from harness.sandbox import Sandbox
+from harness.tools.bash import set_sandbox 
+
 
 load_dotenv()
 
@@ -28,6 +31,12 @@ SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "system.txt").read_text()
 
 def run():
   """run this loop until the user ends the conversation"""
+
+  # Setting up the sandbox so the agent ops is done in container rather than polluting host machine
+  sandbox = Sandbox()
+  sandbox.start()
+
+  set_sandbox(sandbox)
 
   try:
 
@@ -131,6 +140,11 @@ def run():
   except KeyboardInterrupt:
 
     print("good bye !!")
+
+  finally:
+
+    # Stop the sandbox
+    sandbox.stop()
 
 
 

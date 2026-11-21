@@ -4,6 +4,15 @@ import subprocess
 from harness.tools.filesystem import WORKSPACE
 from harness.tools.registry import tool
 from harness.config import BASH_TIMEOUT, ALLOW_LIST, DENY_LIST
+from harness.sandbox import Sandbox
+
+
+_sandbox : Sandbox | None = None
+
+def set_sandbox(sb: Sandbox) -> None:
+  """isko call krenge from agent.py to wire this up in this module"""
+  global _sandbox
+  _sandbox = sb
 
 # Seprator
 _CHAIN_SEPRATOR = ("&&", "||", "|", ";")
@@ -95,26 +104,24 @@ def bash(command: str) -> str:
   
 
   try:
-    result = subprocess.run(
-      command,
-      shell=True,
-      cwd=WORKSPACE,
-      capture_output=True,
-      text=True,
-      timeout=BASH_TIMEOUT,
-      check=False
-    )
 
-  except subprocess.TimeoutExpired:
-    return (
-      f"[bash Timeout after {BASH_TIMEOUT}s] command was killed"
-      f"If this was expected to take longer consider running it as sub tasks"
-    )
+    if _sandbox is None:
+      return (
+        "[sandbox not initialized this is internal bug]; please create issue on github"
+        "agent.py should've called it at startup"
+      )
 
-  output = _combine_output(result.stdout, result.stderr) or "(no output)"
+    exit_code, stdout, stderr =  _sandbox.execute(command=command)
 
-  if result.returncode != 0:
-    return f"[bash exit {result.returncode}] {output}"
+    output = _combine_output(stdout, stderr) or "(no output)"
 
-  return output
+    if exit_code != 0:
+      return f"[bash exit {exit_code}] {output}"
+
+    return output
+  
+  except Exception as e:
+    
+    return f"[bash error] soemthing went wrong {e}"
+
 

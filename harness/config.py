@@ -34,3 +34,14 @@ ALLOW_LIST: set[str] = {
 
 DENY_LIST: set[str] =  { "dd", "sudo", "mkfs", "mv" }
 
+
+
+# -------- SANDBOX CONFIGURATION -----------------
+
+SANDBOX_IMAGE: str = "python:3.11-slim"
+
+SANDBOX_WORKSPACE_PATH:str = "/workspace"
+
+SANDBOX_STARTUP_TIMEOUT :int = 30
+
+SANDBOX_CONTAINER_PREFIX: str = "idk-container-"
