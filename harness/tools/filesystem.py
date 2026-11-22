@@ -37,6 +37,13 @@ def read(path: str) -> str:
 def write(path: str, content: str) -> str:
   """Writes content in the file, creates if file dont exist, Overwrites the file if already exist, return bytes count as the confirmation that content was written in the file at given path"""
 
+  if path == "AGENTS.md" or path.endswith("AGENTS.md"):
+    return (
+      "[write] AGENTS.md is memory managed use the `remember` tool"
+      "with category and text to write to this particular file instead of write()"
+    )
+
+
   target = _resolve_path(path)
 
   target.parent.mkdir(exist_ok=True, parents=True)

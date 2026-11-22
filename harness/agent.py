@@ -6,7 +6,10 @@ import json
 from typing import cast
 from harness.tools import registry
 from harness.config import STEP_BUDGET, MODEL
-from harness.memory import load_agentmd_file
+from harness.memory import (
+  load_agentmd_file,
+  consolidate_memory
+)
 from harness.sandbox import Sandbox
 from harness.tools.bash import set_sandbox 
 
@@ -67,6 +70,7 @@ def run():
 
       if user_input in {"quit", "exit"}:
         print("Good Bye!!")
+        consolidate_memory(messages=messages, client=client)
         break
 
       if not user_input:

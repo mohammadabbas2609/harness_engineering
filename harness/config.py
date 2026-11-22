@@ -1,7 +1,9 @@
 
 # Model
 
-MODEL: str = "gpt-4o-mini"
+MODEL: str = "gpt-5-mini"
+
+COMPACTION_MODEL: str = "gpt-5-mini"
 
 # MODEL: str = "gpt-5-mini"
 
