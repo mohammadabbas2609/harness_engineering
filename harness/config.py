@@ -3,6 +3,8 @@
 
 MODEL: str = "gpt-4o-mini"
 
+# MODEL: str = "gpt-5-mini"
+
 
 # ReAct loop bounds ---
 # The amount of tool call per user turn the model can do, when hit the harness forces the model to summarize what it did and hand back the control to user instead of running loop infinitely
@@ -38,7 +40,7 @@ DENY_LIST: set[str] =  { "dd", "sudo", "mkfs", "mv" }
 
 # -------- SANDBOX CONFIGURATION -----------------
 
-SANDBOX_IMAGE: str = "python:3.11-slim"
+SANDBOX_IMAGE: str = "agent-harness:0.1"
 
 SANDBOX_WORKSPACE_PATH:str = "/workspace"
 

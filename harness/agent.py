@@ -33,10 +33,15 @@ def run():
   """run this loop until the user ends the conversation"""
 
   # Setting up the sandbox so the agent ops is done in container rather than polluting host machine
+  print("===================================")
+  print("Setting up the environment ...")
+  
   sandbox = Sandbox()
   sandbox.start()
-
   set_sandbox(sandbox)
+
+  print("====================================")
+
 
   try:
 
@@ -141,8 +146,11 @@ def run():
 
     print("good bye !!")
 
-  finally:
+  except Exception as e:
+    print(f"Something went wrong ... {e}")
 
+  finally:
+    print("Clearing sandbox ...")
     # Stop the sandbox
     sandbox.stop()
 
