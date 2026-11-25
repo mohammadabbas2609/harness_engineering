@@ -49,3 +49,7 @@ SANDBOX_WORKSPACE_PATH:str = "/workspace"
 SANDBOX_STARTUP_TIMEOUT :int = 30
 
 SANDBOX_CONTAINER_PREFIX: str = "idk-container-"
+
+
+# Controlling the number of result that is returned by web search, 5 seems fine for enough context and not to bloat context much
+WEBSEARCH_MAX_RESULT: int = 5
